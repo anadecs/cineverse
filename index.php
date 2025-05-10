@@ -84,7 +84,7 @@ require_once 'config/database.php';
             <div class="review-list">
                 <?php
                 $stmt = $pdo->query("
-                    SELECT r.*, m.title as movie_title, u.username, u.profile_picture, m.movie_id
+                    SELECT r.*, m.title as movie_title, m.poster_url, u.username, u.profile_picture, m.movie_id
                     FROM reviews r
                     JOIN movies m ON r.movie_id = m.movie_id
                     JOIN users u ON r.user_id = u.user_id
@@ -94,15 +94,21 @@ require_once 'config/database.php';
                 while ($review = $stmt->fetch(PDO::FETCH_ASSOC)):
                     $avatar = $review['profile_picture'] ?: 'assets/images/profile.avif';
                 ?>
-                <div class="review-card">
-                    <img src="<?php echo htmlspecialchars($avatar); ?>" alt="<?php echo htmlspecialchars($review['username']); ?>'s avatar" class="review-avatar">
-                    <div class="review-card-content">
-                        <h3><a href="movie.php?id=<?php echo $review['movie_id']; ?>"><?php echo htmlspecialchars($review['movie_title']); ?></a></h3>
-                        <div class="review-meta">
-                            <span class="reviewer">by <?php echo htmlspecialchars($review['username']); ?></span>
-                            <span class="inline-rating"><?php echo number_format($review['rating'], 1); ?>/5 <span class="stars">★</span></span>
+               <div class="review-card" style="display: flex; gap: 1rem; background: #232323; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                    <div style="display: flex; gap: 1rem; flex: 1;">
+                        <img src="<?php echo htmlspecialchars($avatar); ?>" alt="<?php echo htmlspecialchars($review['username']); ?>'s avatar" class="review-avatar" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                        <div class="review-card-content" style="flex: 1;">
+                            <h3 style="margin: 0 0 0.5rem 0;"><a href="movie.php?id=<?php echo $review['movie_id']; ?>" style="color: #fff; text-decoration: none;"><?php echo htmlspecialchars($review['movie_title']); ?></a></h3>
+                            <div class="review-meta" style="margin-bottom: 0.5rem;">
+                                <span class="reviewer" style="color: #888;">by <?php echo htmlspecialchars($review['username']); ?></span>
+                                <span class="inline-rating" style="color: #f5c518; margin-left: 1rem;"><?php echo number_format($review['rating'], 1); ?> <span class="stars">★</span></span>
+                            </div>
+                            <p class="review-text" style="margin: 0; color: #e5e5e5;"><?php echo htmlspecialchars(substr($review['comment'], 0, 150)) . '...'; ?></p>
                         </div>
-                        <p class="review-text"><?php echo htmlspecialchars(substr($review['comment'], 0, 150)) . '...'; ?></p>
+                    </div>
+                       <a href="movie.php?id=<?php echo $review['movie_id']; ?>" style="flex-shrink: 0;">
+                        <img src="<?php echo htmlspecialchars($review['poster_url']); ?>" alt="<?php echo htmlspecialchars($review['movie_title']); ?>" style="width: 100px; height: 150px; object-fit: cover; border-radius: 4px;">
+                    </a>
                     </div>
                 </div>
                 <?php endwhile; ?>
