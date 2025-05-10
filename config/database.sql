@@ -1,6 +1,6 @@
 -- Create database
-CREATE DATABASE IF NOT EXISTS letterboxd;
-USE letterboxd;
+CREATE DATABASE IF NOT EXISTS Cineverse;
+USE Cineverse;
 
 -- Users table
 CREATE TABLE users (
