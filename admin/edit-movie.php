@@ -58,10 +58,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $release_year = (int)$_POST['release_year'];
     $director_id = (int)$_POST['director_id'];
     $description = trim($_POST['description']);
-    $poster_url = trim($_POST['poster_url']);
     $new_genres = $_POST['genres'] ?? [];
     $genres_input = trim($_POST['genres'] ?? '');
     $cast = trim($_POST['cast'] ?? '');
+    $poster_url = $movie['poster_url'];
+
+    // Handle file upload
+    if (isset($_FILES['poster_file']) && $_FILES['poster_file']['error'] === UPLOAD_ERR_OK) {
+        $fileTmpPath = $_FILES['poster_file']['tmp_name'];
+        $fileName = basename($_FILES['poster_file']['name']);
+        $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
+        $allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'];
+        if (in_array($fileExt, $allowedExts)) {
+            $newFileName = uniqid('poster_', true) . '.' . $fileExt;
+            $uploadDir = '../assets/posters/';
+            if (!is_dir($uploadDir)) { 
+                mkdir($uploadDir, 0777, true); 
+            }
+            $destPath = $uploadDir . $newFileName;
+            if (move_uploaded_file($fileTmpPath, $destPath)) {
+                // Delete old poster if it exists
+                if ($movie['poster_url'] && file_exists('../' . $movie['poster_url'])) {
+                    unlink('../' . $movie['poster_url']);
+                }
+                $poster_url = 'assets/posters/' . $newFileName;
+            } else {
+                $error = 'Failed to upload poster image.';
+            }
+        } else {
+            $error = 'Invalid poster file type.';
+        }
+    }
 
     if (empty($title) || empty($release_year) || empty($director_id) || empty($description) || empty($poster_url)) {
         $error = 'All fields are required';
@@ -75,7 +102,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 SET title = ?, release_year = ?, director_id = ?, description = ?, poster_url = ?
                 WHERE movie_id = ?
             ");
-            $stmt->execute([$title, $release_year, $director_id, $description, $poster_url, $movie_id]);
+             $stmt->execute([$title, $release_year, $director_id, $description, $poster_url, $movie_id]);
 
             // Update genres
             $stmt = $pdo->prepare("DELETE FROM movie_genres WHERE movie_id = ?");
@@ -250,7 +277,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div>
             <?php endif; ?>
 
-            <form method="POST" action="edit-movie.php?id=<?php echo $movie_id; ?>">
+                <form method="POST" action="edit-movie.php?id=<?php echo $movie_id; ?>" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="title">Movie Title</label>
                     <input type="text" id="title" name="title" value="<?php echo htmlspecialchars($movie['title']); ?>" required>
@@ -279,8 +306,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 </div>
 
                 <div class="form-group">
-                    <label for="poster_url">Poster URL</label>
-                    <input type="text" id="poster_url" name="poster_url" value="<?php echo htmlspecialchars($movie['poster_url']); ?>" required>
+                    <label for="poster_file">Poster Image</label>
+                    <input type="file" id="poster_file" name="poster_file" accept="image/*">
+                    <p style="color: #bbb; font-size: 0.9rem; margin-top: 0.5rem;">Current poster: <img src="../<?php echo htmlspecialchars($movie['poster_url']); ?>" alt="Current poster" style="max-height: 100px; vertical-align: middle;"></p>
                 </div>
 
                 <div class="form-group">
