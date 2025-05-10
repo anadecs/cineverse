@@ -30,19 +30,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $fileTmpPath = $_FILES['poster_file']['tmp_name'];
         $fileName = basename($_FILES['poster_file']['name']);
         $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-        $allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'];
+             $allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'];
         if (in_array($fileExt, $allowedExts)) {
             $newFileName = uniqid('poster_', true) . '.' . $fileExt;
-            $destPath = 'assets/posters/' . $newFileName;
-            if (!is_dir('assets/posters')) { mkdir('assets/posters', 0777, true); }
+            $uploadDir = '../assets/posters/';
+            if (!is_dir($uploadDir)) { 
+                mkdir($uploadDir, 0777, true); 
+            }
+            $destPath = $uploadDir . $newFileName;
             if (move_uploaded_file($fileTmpPath, $destPath)) {
-                $poster_url = $destPath;
+                $poster_url = 'assets/posters/' . $newFileName;
             } else {
                 $error = 'Failed to upload poster image.';
             }
-        } else {
-            $error = 'Invalid poster file type.';
-        }
     } else {
         $error = 'Poster image is required.';
     }
