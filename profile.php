@@ -87,7 +87,6 @@ $stmt = $pdo->prepare("SELECT COUNT(DISTINCT movie_id) as movies_watched, COUNT(
 $stmt->execute([$user_id]);
 $stats = $stmt->fetch(PDO::FETCH_ASSOC);
 $movies_watched = $stats['movies_watched'] ?? 0;
-$unique_watches = $movies_watched; // same as movies_watched
 $review_count = $stats['review_count'] ?? 0;
 
 // Get user info (updated)
@@ -154,10 +153,6 @@ $avatar = $user['profile_picture'] ?: 'assets/images/profile.avif';
                 <div style="background:#232323;padding:1.5rem 2.5rem;border-radius:12px;text-align:center;min-width:160px;">
                     <div style="font-size:2.2rem;font-weight:700;color:#f5c518;"><?php echo $movies_watched; ?></div>
                     <div style="color:#bbb;font-size:1.1rem;">Movies Watched</div>
-                </div>
-                <div style="background:#232323;padding:1.5rem 2.5rem;border-radius:12px;text-align:center;min-width:160px;">
-                    <div style="font-size:2.2rem;font-weight:700;color:#f5c518;"><?php echo $unique_watches; ?></div>
-                    <div style="color:#bbb;font-size:1.1rem;">Unique Watches</div>
                 </div>
                 <div style="background:#232323;padding:1.5rem 2.5rem;border-radius:12px;text-align:center;min-width:160px;">
                     <div style="font-size:2.2rem;font-weight:700;color:#f5c518;"><?php echo $review_count; ?></div>
