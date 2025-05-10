@@ -21,15 +21,13 @@ CREATE TABLE genres (
 -- Directors table
 CREATE TABLE directors (
     director_id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(100) NOT NULL,
-    bio TEXT
+    name VARCHAR(100) NOT NULL
 );
 
 -- Actors table
 CREATE TABLE actors (
     actor_id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(100) NOT NULL,
-    bio TEXT
+    name VARCHAR(100) NOT NULL
 );
 
 -- Movies table
