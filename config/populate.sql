@@ -9,10 +9,9 @@ INSERT INTO directors (name) VALUES ('Steven Spielberg'), ('Christopher Nolan'),
 
 -- Populate users
 INSERT INTO users (username, email, password_hash, is_admin) VALUES
-('admin', 'admin@cineverse.com', '$2y$10$6cGhp1a2/6UVNWjwPZ0GusH2dAtz4bQUZ.ZMPLOwQw6QwQwQwQwQw', 1),
 ('user1', 'user1@cineverse.com', '$2y$10$6cGhp1a2/6UVNWjwPZ0GusH2dAtz4bQUZ.ZMPLOwQw6QwQwQwQwQw', 0),
 ('user2', 'user2@cineverse.com', '$2y$10$6cGhp1a2/6UVNWjwPZ0GusH2dAtz4bQUZ.ZMPLOwQw6QwQwQwQwQw', 0);
--- password for all: password
+-- password to all is password
 
 -- Populate movies
 INSERT INTO movies (title, description, release_year, poster_url, director_id)
