@@ -1,4 +1,6 @@
 <?php
+
+ini_set('display_errors', 1);
 session_start();
 require_once 'config/database.php';
 ?>
@@ -53,7 +55,7 @@ require_once 'config/database.php';
             <h2>Featured Movies</h2>
             <div class="movie-grid">
                 <?php
-               $stmt = $pdo->query("
+                $stmt = $pdo->query("
                     SELECT m.*, d.name as director_name,
                            COALESCE((SELECT AVG(r.rating) FROM reviews r WHERE r.movie_id = m.movie_id), 0) as avg_rating_5,
                            COALESCE((SELECT COUNT(*) FROM reviews r WHERE r.movie_id = m.movie_id), 0) as review_count
@@ -94,7 +96,7 @@ require_once 'config/database.php';
                 while ($review = $stmt->fetch(PDO::FETCH_ASSOC)):
                     $avatar = $review['profile_picture'] ?: 'assets/images/profile.avif';
                 ?>
-               <div class="review-card" style="display: flex; gap: 1rem; background: #232323; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+                <div class="review-card" style="display: flex; gap: 1rem; background: #232323; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
                     <div style="display: flex; gap: 1rem; flex: 1;">
                         <img src="<?php echo htmlspecialchars($avatar); ?>" alt="<?php echo htmlspecialchars($review['username']); ?>'s avatar" class="review-avatar" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
                         <div class="review-card-content" style="flex: 1;">
@@ -106,10 +108,9 @@ require_once 'config/database.php';
                             <p class="review-text" style="margin: 0; color: #e5e5e5;"><?php echo htmlspecialchars(substr($review['comment'], 0, 150)) . '...'; ?></p>
                         </div>
                     </div>
-                       <a href="movie.php?id=<?php echo $review['movie_id']; ?>" style="flex-shrink: 0;">
+                    <a href="movie.php?id=<?php echo $review['movie_id']; ?>" style="flex-shrink: 0; margin-left: 24px;">
                         <img src="<?php echo htmlspecialchars($review['poster_url']); ?>" alt="<?php echo htmlspecialchars($review['movie_title']); ?>" style="width: 100px; height: 150px; object-fit: cover; border-radius: 4px;">
                     </a>
-                    </div>
                 </div>
                 <?php endwhile; ?>
             </div>
