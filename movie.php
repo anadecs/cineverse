@@ -11,7 +11,8 @@ $movie_id = (int)$_GET['id'];
 
 // Get movie details
 $stmt = $pdo->prepare("
-    SELECT m.*, d.name as director_name, d.bio as director_bio,
+    $stmt = $pdo->prepare("
+    SELECT m.*, d.name as director_name,
            GROUP_CONCAT(DISTINCT g.name) as genres,
            GROUP_CONCAT(DISTINCT a.name) as actors,
            (SELECT AVG(r.rating) FROM reviews r WHERE r.movie_id = m.movie_id) as avg_rating,
