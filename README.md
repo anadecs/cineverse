@@ -16,7 +16,7 @@ CineVerse is a movie diary and social network for film lovers. Users can browse,
 
 ```
 git clone <your-repo-url>
-cd letterboxd
+cd cineverse
 ```
 
 ### 2. Database Setup
