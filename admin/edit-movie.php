@@ -20,9 +20,10 @@ $movie_id = (int)$_GET['id'];
 
 // Get movie details
 $stmt = $pdo->prepare("
-    SELECT m.*, GROUP_CONCAT(mg.genre_id) as selected_genres
+    SELECT m.*, GROUP_CONCAT(g.name) as genre_names
     FROM movies m
     LEFT JOIN movie_genres mg ON m.movie_id = mg.movie_id
+    LEFT JOIN genres g ON mg.genre_id = g.genre_id
     WHERE m.movie_id = ?
     GROUP BY m.movie_id
 ");
@@ -42,15 +43,15 @@ $directors = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $stmt = $pdo->query("SELECT genre_id, name FROM genres ORDER BY name");
 $genres = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Get selected genres
-$selected_genres = $movie['selected_genres'] ? explode(',', $movie['selected_genres']) : [];
-$genres_str = $movie['genres'] ?? '';
 
 // Get current cast (actors)
 $stmt = $pdo->prepare("SELECT a.name FROM movie_actors ma JOIN actors a ON ma.actor_id = a.actor_id WHERE ma.movie_id = ?");
 $stmt->execute([$movie_id]);
 $cast_names = $stmt->fetchAll(PDO::FETCH_COLUMN);
 $cast_str = implode(', ', $cast_names);
+
+// Get genres string
+$genres_str = $movie['genre_names'] ?? '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = trim($_POST['title']);
