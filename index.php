@@ -53,14 +53,14 @@ require_once 'config/database.php';
             <h2>Featured Movies</h2>
             <div class="movie-grid">
                 <?php
-                $stmt = $pdo->query("
+               $stmt = $pdo->query("
                     SELECT m.*, d.name as director_name,
-                           (SELECT AVG(r.rating) FROM reviews r WHERE r.movie_id = m.movie_id) as avg_rating_5,
-                           (SELECT COUNT(*) FROM reviews r WHERE r.movie_id = m.movie_id) as review_count
+                           COALESCE((SELECT AVG(r.rating) FROM reviews r WHERE r.movie_id = m.movie_id), 0) as avg_rating_5,
+                           COALESCE((SELECT COUNT(*) FROM reviews r WHERE r.movie_id = m.movie_id), 0) as review_count
                     FROM movies m
                     LEFT JOIN directors d ON m.director_id = d.director_id
-                    ORDER BY avg_rating_5 DESC
-                    LIMIT 6
+                    ORDER BY m.movie_id DESC
+                    LIMIT 5
                 ");
                 while ($movie = $stmt->fetch(PDO::FETCH_ASSOC)):
                 ?>
