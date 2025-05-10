@@ -35,7 +35,7 @@ cd cineverse
 
 ### 5. Admin Access
 
-- Log in with an admin account (default: admin@cineverse.com, password: 12345678) or set `is_admin=1` for a user in the `users` table.
+- Log in with an admin account (default: admin, password: 12345678) or set `is_admin=1` for a user in the `users` table.
 
 ## Directory Structure
 
