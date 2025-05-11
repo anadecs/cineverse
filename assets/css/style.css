@@ -1091,9 +1091,7 @@ footer {
 .btn,
 .movie-card a {
   text-decoration: none !important;
-}
-
-/* Inline rating for review cards (star and number aligned) */
+}
 .inline-rating {
   display: inline-flex;
   align-items: center;
