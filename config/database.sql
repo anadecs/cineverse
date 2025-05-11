@@ -66,7 +66,7 @@ CREATE TABLE reviews (
     review_id INT PRIMARY KEY AUTO_INCREMENT,
     movie_id INT,
     user_id INT,
-    rating DECIMAL(3,1) CHECK (rating >= 0 AND rating <= 10),
+    rating DECIMAL(3,1) CHECK (rating >= 0 AND rating <= 5),
     comment TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
