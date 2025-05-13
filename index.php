@@ -62,7 +62,7 @@ require_once 'config/database.php';
                            COALESCE((SELECT COUNT(*) FROM reviews r WHERE r.movie_id = m.movie_id), 0) as review_count
                     FROM movies m
                     LEFT JOIN directors d ON m.director_id = d.director_id
-                    ORDER BY m.movie_id DESC
+                    ORDER BY RAND()
                     LIMIT 5
                 ");
                 while ($movie = $stmt->fetch(PDO::FETCH_ASSOC)):
@@ -91,7 +91,7 @@ require_once 'config/database.php';
                     FROM reviews r
                     JOIN movies m ON r.movie_id = m.movie_id
                     JOIN users u ON r.user_id = u.user_id
-                    ORDER BY r.created_at DESC
+                    ORDER BY RAND()
                     LIMIT 5
                 ");
                 while ($review = $stmt->fetch(PDO::FETCH_ASSOC)):
