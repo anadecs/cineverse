@@ -20,6 +20,7 @@ $counts = array_map(function($m){return (int)$m['review_count'];}, $top_movies);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Statistics - CineVerse</title>
     <link rel="stylesheet" href="../assets/css/style.css">
+    <link rel="icon" type="image/svg+xml" href="assets/images/logo-cineverse.svg">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
