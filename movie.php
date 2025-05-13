@@ -11,7 +11,6 @@ $movie_id = (int)$_GET['id'];
 
 // Get movie details
 $stmt = $pdo->prepare("
-    $stmt = $pdo->prepare("
     SELECT m.*, d.name as director_name,
            GROUP_CONCAT(DISTINCT g.name) as genres,
            GROUP_CONCAT(DISTINCT a.name) as actors,
@@ -78,8 +77,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SESSION['user_id'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($movie['title']); ?> - CineVerse</title>
-    <link rel="stylesheet" href="assets/css/style.css">
     <link rel="icon" type="image/svg+xml" href="assets/images/logo-cineverse.svg">
+    <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -175,7 +174,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SESSION['user_id'])) {
                         <div class="review-card" style="background:#232323;border-radius:8px;padding:1rem;margin-bottom:1rem;">
                             <div class="review-header" style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;">
                                 <div class="reviewer-info" style="display:flex;align-items:center;gap:0.75rem;">
-                                    <img src="<?php echo $review['profile_picture'] ?: 'assets/images/profile.avif'; ?>" 
+                                    <img src="<?php echo !empty($review['profile_picture']) ? htmlspecialchars($review['profile_picture']) : 'assets/images/profile.avif'; ?>" 
                                          alt="<?php echo htmlspecialchars($review['username']); ?>" 
                                          class="review-avatar" 
                                          style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
