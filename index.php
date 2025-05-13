@@ -10,8 +10,8 @@ require_once 'config/database.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CineVerse - Movie Reviews</title>
-    <link rel="stylesheet" href="assets/css/style.css">
     <link rel="icon" type="image/svg+xml" href="assets/images/logo-cineverse.svg">
+    <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -87,7 +87,7 @@ require_once 'config/database.php';
             <div class="review-list">
                 <?php
                 $stmt = $pdo->query("
-                    SELECT r.*, m.title as movie_title, m.poster_url, u.username, u.profile_picture, m.movie_id
+                    SELECT r.*, m.title as movie_title, m.poster_url, m.release_year, u.username, u.profile_picture, m.movie_id
                     FROM reviews r
                     JOIN movies m ON r.movie_id = m.movie_id
                     JOIN users u ON r.user_id = u.user_id
@@ -101,7 +101,7 @@ require_once 'config/database.php';
                     <div style="display: flex; gap: 1rem; flex: 1;">
                         <img src="<?php echo htmlspecialchars($avatar); ?>" alt="<?php echo htmlspecialchars($review['username']); ?>'s avatar" class="review-avatar" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
                         <div class="review-card-content" style="flex: 1;">
-                            <h3 style="margin: 0 0 0.5rem 0;"><a href="movie.php?id=<?php echo $review['movie_id']; ?>" style="color: #fff; text-decoration: none;"><?php echo htmlspecialchars($review['movie_title']); ?></a></h3>
+                            <h3 style="margin: 0 0 0.5rem 0;"><a href="movie.php?id=<?php echo $review['movie_id']; ?>" style="color: #fff; text-decoration: none;"><?php echo htmlspecialchars($review['movie_title']); ?> (<?php echo htmlspecialchars($review['release_year']); ?>)</a></h3>
                             <div class="review-meta" style="margin-bottom: 0.5rem;">
                                 <span class="reviewer" style="color: #888;">by <?php echo htmlspecialchars($review['username']); ?></span>
                                 <span class="inline-rating" style="color: #f5c518; margin-left: 1rem;"><?php echo number_format($review['rating'], 1); ?> <span class="stars">★</span></span>
