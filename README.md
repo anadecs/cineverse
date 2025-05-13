@@ -45,6 +45,3 @@ cd cineverse
 - `/includes` - Shared header/footer (if used)
 - Main pages: `index.php`, `movies.php`, `top-rated.php`, `search.php`, `movie.php`, `profile.php`, `login.php`, `register.php`
 
-## License
-
-MIT
