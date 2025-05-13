@@ -91,7 +91,7 @@ require_once 'config/database.php';
                     FROM reviews r
                     JOIN movies m ON r.movie_id = m.movie_id
                     JOIN users u ON r.user_id = u.user_id
-                    ORDER BY RAND()
+                    ORDER BY r.review_date DESC
                     LIMIT 5
                 ");
                 while ($review = $stmt->fetch(PDO::FETCH_ASSOC)):
