@@ -35,7 +35,7 @@ INSERT INTO reviews (movie_id, user_id, rating, comment) VALUES
 (1, 1, 5, 'Mind-bending and visually stunning!'),
 (1, 2, 4, 'Great movie, a bit confusing.'),
 (2, 1, 5, 'A classic. Tom Hanks is amazing.'),
-(3, 3, 4, 'Tarantino at his best.'),
+(3, 2, 4, 'Tarantino at his best.'),
 (4, 2, 3, 'Visually impressive but story is average.'),
 (5, 1, 5, 'Beautiful adaptation!'),
-(5, 3, 4, 'Loved the performances.'); 
+(5, 2, 4, 'Loved the performances.'); 
