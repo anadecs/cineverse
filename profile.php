@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
 
 // Get user's reviews
 $stmt = $pdo->prepare("
-    SELECT r.*, m.title as movie_title, m.poster_url, m.movie_id
+    SELECT r.*, m.title as movie_title, m.poster_url, m.movie_id, m.release_year
     FROM reviews r
     JOIN movies m ON r.movie_id = m.movie_id
     WHERE r.user_id = ?
@@ -101,8 +101,8 @@ $avatar = $user['profile_picture'] ?: 'assets/images/profile.avif';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile - CineVerse</title>
-    <link rel="stylesheet" href="assets/css/style.css">
     <link rel="icon" type="image/svg+xml" href="assets/images/logo-cineverse.svg">
+    <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -181,7 +181,7 @@ $avatar = $user['profile_picture'] ?: 'assets/images/profile.avif';
                                 <div class="review-movie-info">
                                     <h3>
                                         <a href="movie.php?id=<?php echo $review['movie_id']; ?>" style="color:#fff;text-decoration:none;font-weight:600;">
-                                            <?php echo htmlspecialchars($review['movie_title']); ?>
+                                            <?php echo htmlspecialchars($review['movie_title']); ?> (<?php echo htmlspecialchars($review['release_year']); ?>)
                                         </a>
                                     </h3>
                                     <div class="inline-rating" style="margin-top:0.5rem;">
