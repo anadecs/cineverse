@@ -10,7 +10,7 @@ $image_base_url = 'https://image.tmdb.org/t/p/w500';
 
 $movie_titles = [
     'Barbie',
-    'Parasite',
+    'Parasite 2019',
     'Interstellar',
     'Fight Club',
     'La la land',
