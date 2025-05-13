@@ -119,11 +119,11 @@ function getOrInsertGenre($name) {
 
 
 $sample_users = [
-    ['username' => 'alice', 'email' => 'alice@example.com', 'password' => password_hash('password1', PASSWORD_DEFAULT)],
-    ['username' => 'bob', 'email' => 'bob@example.com', 'password' => password_hash('password2', PASSWORD_DEFAULT)],
-    ['username' => 'carol', 'email' => 'carol@example.com', 'password' => password_hash('password3', PASSWORD_DEFAULT)],
-    ['username' => 'dave', 'email' => 'dave@example.com', 'password' => password_hash('password4', PASSWORD_DEFAULT)],
-    ['username' => 'eve', 'email' => 'eve@example.com', 'password' => password_hash('password5', PASSWORD_DEFAULT)],
+    ['username' => 'alice', 'email' => 'alice@example.com', 'password' => password_hash('password', PASSWORD_DEFAULT)],
+    ['username' => 'bob', 'email' => 'bob@example.com', 'password' => password_hash('password', PASSWORD_DEFAULT)],
+    ['username' => 'carol', 'email' => 'carol@example.com', 'password' => password_hash('password', PASSWORD_DEFAULT)],
+    ['username' => 'dave', 'email' => 'dave@example.com', 'password' => password_hash('password', PASSWORD_DEFAULT)],
+    ['username' => 'eve', 'email' => 'eve@example.com', 'password' => password_hash('password', PASSWORD_DEFAULT)],
 ];
 $user_ids = [];
 foreach ($sample_users as $user) {
