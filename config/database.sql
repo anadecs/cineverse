@@ -1,6 +1,6 @@
 -- Create database
-CREATE DATABASE IF NOT EXISTS Cineverse;
-USE Cineverse;
+CREATE DATABASE IF NOT EXISTS cinverse;
+USE cinverse;
 
 -- Users table
 CREATE TABLE users (
@@ -22,13 +22,15 @@ CREATE TABLE genres (
 -- Directors table
 CREATE TABLE directors (
     director_id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(100) NOT NULL
+    name VARCHAR(100) NOT NULL,
+    image_url VARCHAR(255) NOT NULL DEFAULT 'assets/images/profile.avif'
 );
 
 -- Actors table
 CREATE TABLE actors (
     actor_id INT PRIMARY KEY AUTO_INCREMENT,
-    name VARCHAR(100) NOT NULL
+    name VARCHAR(100) NOT NULL,
+    image_url VARCHAR(255) NOT NULL DEFAULT 'assets/images/profile.avif'
 );
 
 -- Movies table
@@ -66,7 +68,7 @@ CREATE TABLE reviews (
     review_id INT PRIMARY KEY AUTO_INCREMENT,
     movie_id INT,
     user_id INT,
-    rating DECIMAL(3,1) CHECK (rating >= 0 AND rating <= 5),
+    rating DECIMAL(3,1) CHECK (rating >= 0 AND rating <= 10),
     comment TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -74,4 +76,7 @@ CREATE TABLE reviews (
     FOREIGN KEY (user_id) REFERENCES users(user_id)
 );
 
-
+-- Insert some sample genres
+INSERT INTO genres (name) VALUES 
+('Action'), ('Comedy'), ('Drama'), ('Horror'), ('Sci-Fi'), 
+('Romance'), ('Thriller'), ('Documentary'), ('Animation'), ('Fantasy'); 
