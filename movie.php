@@ -22,17 +22,16 @@ $stmt = $pdo->prepare("
     LEFT JOIN genres g ON mg.genre_id = g.genre_id
     LEFT JOIN movie_actors ma ON m.movie_id = ma.movie_id
     LEFT JOIN actors a ON ma.actor_id = a.actor_id
-    WHERE m.movie_id = ?
+    WHERE m.movie_id = :movie_id
     GROUP BY m.movie_id
 ");
-$stmt->execute([$movie_id]);
+$stmt->execute(['movie_id' => $movie_id]);
 $movie = $stmt->fetch(PDO::FETCH_ASSOC);
 
 if (!$movie) {
     header('Location: index.php');
     exit;
 }
-
 // Get reviews
 $stmt = $pdo->prepare("
     SELECT r.*, u.username, u.profile_picture
@@ -70,6 +69,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SESSION['user_id'])) {
         }
     }
 }
+
+// Fetch director image
+$director_image_url = 'assets/images/profile.avif';
+if (!empty($movie['director_name'])) {
+    $stmt = $pdo->prepare("SELECT image_url FROM directors WHERE name = ? LIMIT 1");
+    $stmt->execute([$movie['director_name']]);
+    $director_row = $stmt->fetch(PDO::FETCH_ASSOC);
+    if ($director_row && !empty($director_row['image_url'])) {
+        $director_image_url = $director_row['image_url'];
+    }
+}
+// Fetch actors (name, image_url)
+$actors = [];
+$stmt = $pdo->prepare("SELECT a.name, a.image_url FROM movie_actors ma JOIN actors a ON ma.actor_id = a.actor_id WHERE ma.movie_id = ?");
+$stmt->execute([$movie_id]);
+while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+    $actors[] = $row;
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -77,7 +94,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SESSION['user_id'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo htmlspecialchars($movie['title']); ?> - CineVerse</title>
-    <link rel="icon" type="image/svg+xml" href="assets/images/logo-cineverse.svg">
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -129,9 +145,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SESSION['user_id'])) {
                     </div>
                     
                     <div class="movie-meta">
-                        <p><strong>Director:</strong> <?php echo htmlspecialchars($movie['director_name']); ?></p>
                         <p><strong>Genres:</strong> <?php echo htmlspecialchars($movie['genres']); ?></p>
-                        <p><strong>Cast:</strong> <?php echo htmlspecialchars($movie['actors']); ?></p>
                     </div>
                     
                     <div class="movie-description">
@@ -139,6 +153,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SESSION['user_id'])) {
                         <p><?php echo nl2br(htmlspecialchars($movie['description'])); ?></p>
                     </div>
                 </div>
+            </div>
+            <!-- Cast & Crew Heading -->
+            <h2 style="margin-bottom: 1rem; margin-top: 2rem; font-size: 1.4rem; font-weight: 700; color: #fff; letter-spacing: 0.5px;">Cast & Crew</h2>
+            <!-- New: Director and Cast Cards -->
+            <div class="person-cards" style="display:flex;gap:1.5rem;margin-top:1.5rem;margin-bottom:3.5rem;flex-wrap:wrap;align-items:flex-start;">
+                <!-- Director Card -->
+                <a href="search.php?q=<?php echo urlencode($movie['director_name']); ?>" class="person-card" style="display:flex;flex-direction:column;align-items:center;background:#232323;border-radius:10px;padding:0.75rem 1.25rem;text-align:center;text-decoration:none;color:#fff;min-width:110px;">
+                    <img src="<?php echo htmlspecialchars($director_image_url); ?>" alt="<?php echo htmlspecialchars($movie['director_name']); ?>" style="width:64px;height:64px;border-radius:50%;object-fit:cover;margin-bottom:0.5rem;">
+                    <span style="font-weight:600;">Director</span>
+                    <span style="margin-top:0.25rem;"><?php echo htmlspecialchars($movie['director_name']); ?></span>
+                </a>
+                <!-- Actor Cards -->
+                <?php foreach ($actors as $actor): ?>
+                <a href="search.php?q=<?php echo urlencode($actor['name']); ?>" class="person-card" style="display:flex;flex-direction:column;align-items:center;background:#232323;border-radius:10px;padding:0.75rem 1.25rem;text-align:center;text-decoration:none;color:#fff;min-width:110px;">
+                    <img src="<?php echo htmlspecialchars($actor['image_url'] ?: 'assets/images/profile.avif'); ?>" alt="<?php echo htmlspecialchars($actor['name']); ?>" style="width:64px;height:64px;border-radius:50%;object-fit:cover;margin-bottom:0.5rem;">
+                    <span style="font-weight:600;">Actor</span>
+                    <span style="margin-top:0.25rem;"><?php echo htmlspecialchars($actor['name']); ?></span>
+                </a>
+                <?php endforeach; ?>
             </div>
 
             <?php if (isset($_SESSION['user_id'])): ?>
@@ -174,7 +207,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_SESSION['user_id'])) {
                         <div class="review-card" style="background:#232323;border-radius:8px;padding:1rem;margin-bottom:1rem;">
                             <div class="review-header" style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;">
                                 <div class="reviewer-info" style="display:flex;align-items:center;gap:0.75rem;">
-                                    <img src="<?php echo !empty($review['profile_picture']) ? htmlspecialchars($review['profile_picture']) : 'assets/images/profile.avif'; ?>" 
+                                    <img src="<?php echo $review['profile_picture'] ?: 'assets/images/profile.avif'; ?>" 
                                          alt="<?php echo htmlspecialchars($review['username']); ?>" 
                                          class="review-avatar" 
                                          style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
