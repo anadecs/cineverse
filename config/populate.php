@@ -1,5 +1,5 @@
 <?php
-set_time_limit(300);
+set_time_limit(1200); // 20 minutes
 require_once '../config/database.php';
 
 // TMDB API configuration
@@ -10,7 +10,7 @@ $image_base_url = 'https://image.tmdb.org/t/p/w500';
 
 $movie_titles = [
     'Barbie',
-    'Parasite 2019',
+    'Parasite',
     'Interstellar',
     'Fight Club',
     'La la land',
@@ -70,17 +70,17 @@ function fetchFromTMDB($endpoint, $params = []) {
     return json_decode($response, true);
 }
 
-function insertDirector($name) {
+function insertDirector($name, $image_url) {
     global $pdo;
-    $stmt = $pdo->prepare("INSERT INTO directors (name) VALUES (?)");
-    $stmt->execute([$name]);
+    $stmt = $pdo->prepare("INSERT INTO directors (name, image_url) VALUES (?, ?)");
+    $stmt->execute([$name, $image_url]);
     return $pdo->lastInsertId();
 }
 
-function insertActor($name) {
+function insertActor($name, $image_url) {
     global $pdo;
-    $stmt = $pdo->prepare("INSERT INTO actors (name) VALUES (?)");
-    $stmt->execute([$name]);
+    $stmt = $pdo->prepare("INSERT INTO actors (name, image_url) VALUES (?, ?)");
+    $stmt->execute([$name, $image_url]);
     return $pdo->lastInsertId();
 }
 
@@ -174,14 +174,25 @@ foreach ($movie_titles as $title) {
         echo "Movie already exists: {$movie['title']} ({$release_year})\n";
     } else {
        
+        $default_image = 'assets/images/profile.avif';
+        // --- Director ---
         $director_name = '';
+        $director_image = $default_image;
+        $director_id_tmdb = null;
         foreach ($credits['crew'] as $crew) {
             if ($crew['job'] === 'Director') {
                 $director_name = $crew['name'];
+                $director_id_tmdb = $crew['id'];
                 break;
             }
         }
-        $director_id = insertDirector($director_name);
+        if ($director_id_tmdb) {
+            $person = fetchFromTMDB("/person/{$director_id_tmdb}");
+            if (!empty($person['profile_path'])) {
+                $director_image = $image_base_url . $person['profile_path'];
+            }
+        }
+        $director_id = insertDirector($director_name, $director_image);
       
         $poster_url = $movie['poster_path'] ? $image_base_url . $movie['poster_path'] : null;
         $movie_id = insertMovie(
@@ -203,7 +214,14 @@ foreach ($movie_titles as $title) {
     $actor_count = 0;
     foreach ($credits['cast'] as $actor) {
         if ($actor_count >= 5) break;
-        $actor_id = insertActor($actor['name']);
+        $actor_image = $default_image;
+        if (!empty($actor['id'])) {
+            $person = fetchFromTMDB("/person/{$actor['id']}");
+            if (!empty($person['profile_path'])) {
+                $actor_image = $image_base_url . $person['profile_path'];
+            }
+        }
+        $actor_id = insertActor($actor['name'], $actor_image);
         insertMovieActor($movie_id, $actor_id);
         $actor_count++;
     }
