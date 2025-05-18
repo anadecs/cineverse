@@ -15,7 +15,7 @@ You can access the online version here https://cineversee.great-site.net/
 ### 1. Clone the Repository
 
 ```
-git clone <your-repo-url>
+git clone https://github.com/anadecs/cineverse.git
 cd cineverse
 ```
 
