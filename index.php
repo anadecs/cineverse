@@ -3,6 +3,7 @@
 ini_set('display_errors', 1);
 session_start();
 require_once 'config/database.php';
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -10,9 +11,18 @@ require_once 'config/database.php';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CineVerse - Movie Reviews</title>
-    <link rel="icon" type="image/svg+xml" href="assets/images/logo-cineverse.svg">
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .movie-card {
+            transition: box-shadow 0.2s, transform 0.2s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+        }
+        .movie-card:hover {
+            box-shadow: 0 8px 32px rgba(178,7,15,0.35);
+            transform: translateY(-6px) scale(1.01);
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -52,6 +62,8 @@ require_once 'config/database.php';
             <p>Join our community of movie enthusiasts</p>
         </section>
 
+       
+
         <section class="featured-movies">
             <h2>Featured Movies</h2>
             <div class="movie-grid">
@@ -62,7 +74,7 @@ require_once 'config/database.php';
                            COALESCE((SELECT COUNT(*) FROM reviews r WHERE r.movie_id = m.movie_id), 0) as review_count
                     FROM movies m
                     LEFT JOIN directors d ON m.director_id = d.director_id
-                    ORDER BY RAND()
+                    ORDER BY m.movie_id DESC
                     LIMIT 5
                 ");
                 while ($movie = $stmt->fetch(PDO::FETCH_ASSOC)):
@@ -83,27 +95,32 @@ require_once 'config/database.php';
         </section>
 
         <section class="latest-reviews">
-            <h2>Latest Reviews</h2>
+            <h2>Latest Reviews</h2><br>
             <div class="review-list">
                 <?php
                 $stmt = $pdo->query("
-                    SELECT r.*, m.title as movie_title, m.poster_url, m.release_year, u.username, u.profile_picture, m.movie_id
+                    SELECT r.*, m.title as movie_title, m.poster_url, u.username, u.profile_picture, m.movie_id
                     FROM reviews r
                     JOIN movies m ON r.movie_id = m.movie_id
                     JOIN users u ON r.user_id = u.user_id
-                    ORDER BY r.review_date DESC
+                    ORDER BY r.created_at DESC
                     LIMIT 5
                 ");
                 while ($review = $stmt->fetch(PDO::FETCH_ASSOC)):
                     $avatar = $review['profile_picture'] ?: 'assets/images/profile.avif';
+                    $is_own_profile = isset($_SESSION['user_id']) && $_SESSION['user_id'] == $review['user_id'];
                 ?>
                 <div class="review-card" style="display: flex; gap: 1rem; background: #232323; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
                     <div style="display: flex; gap: 1rem; flex: 1;">
-                        <img src="<?php echo htmlspecialchars($avatar); ?>" alt="<?php echo htmlspecialchars($review['username']); ?>'s avatar" class="review-avatar" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                        <a href="<?php echo $is_own_profile ? 'profile.php' : 'profiles.php?id=' . $review['user_id']; ?>">
+                            <img src="<?php echo htmlspecialchars($avatar); ?>" alt="<?php echo htmlspecialchars($review['username']); ?>'s avatar" class="review-avatar" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover;">
+                        </a>
                         <div class="review-card-content" style="flex: 1;">
-                            <h3 style="margin: 0 0 0.5rem 0;"><a href="movie.php?id=<?php echo $review['movie_id']; ?>" style="color: #fff; text-decoration: none;"><?php echo htmlspecialchars($review['movie_title']); ?> (<?php echo htmlspecialchars($review['release_year']); ?>)</a></h3>
+                            <h3 style="margin: 0 0 0.5rem 0;"><a href="movie.php?id=<?php echo $review['movie_id']; ?>" style="color: #fff; text-decoration: none;"><?php echo htmlspecialchars($review['movie_title']); ?></a></h3>
                             <div class="review-meta" style="margin-bottom: 0.5rem;">
-                                <span class="reviewer" style="color: #888;">by <?php echo htmlspecialchars($review['username']); ?></span>
+                                <span class="reviewer" style="color: #888;">by <a href="<?php echo $is_own_profile ? 'profile.php' : 'profiles.php?id=' . $review['user_id']; ?>" style="color: #888; text-decoration: underline;">
+                                    <?php echo htmlspecialchars($review['username']); ?>
+                                </a></span>
                                 <span class="inline-rating" style="color: #f5c518; margin-left: 1rem;"><?php echo number_format($review['rating'], 1); ?> <span class="stars">★</span></span>
                             </div>
                             <p class="review-text" style="margin: 0; color: #e5e5e5;"><?php echo htmlspecialchars(substr($review['comment'], 0, 150)) . '...'; ?></p>
