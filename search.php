@@ -291,12 +291,12 @@ $total_pages = ceil($total_results / $per_page);
     <footer>
         <div class="footer-content">
             <div class="footer-section">
-                <h3>About Letterboxd</h3>
+                <h3>About CineVerse</h3>
                 <p>Your personal movie diary and social network for film lovers.</p>
             </div>
         </div>
         <div class="footer-bottom">
-            <p>&copy; 2024 Letterboxd. All rights reserved.</p>
+            <p>&copy; 2024 CineVerse. All rights reserved.</p>
         </div>
     </footer>
 </body>
