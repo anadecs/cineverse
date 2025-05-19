@@ -145,7 +145,7 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     </div>
                     
                     <div class="movie-meta">
-                        <p><strong>Genres:</strong> <?php echo htmlspecialchars($movie['genres']); ?></p>
+                        <p><strong>Genres:</strong> <?php echo str_replace(',', ', ', htmlspecialchars($movie['genres'])); ?></p>
                     </div>
                     
                     <div class="movie-description">
@@ -204,16 +204,25 @@ while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
                     <p>No reviews yet. Be the first to review this movie!</p>
                 <?php else: ?>
                     <?php foreach ($reviews as $review): ?>
+                        <?php $is_own_profile = isset($_SESSION['user_id']) && $_SESSION['user_id'] == $review['user_id']; ?>
                         <div class="review-card" style="background:#232323;border-radius:8px;padding:1rem;margin-bottom:1rem;">
                             <div class="review-header" style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;">
                                 <div class="reviewer-info" style="display:flex;align-items:center;gap:0.75rem;">
-                                    <img src="<?php echo $review['profile_picture'] ?: 'assets/images/profile.avif'; ?>" 
-                                         alt="<?php echo htmlspecialchars($review['username']); ?>" 
-                                         class="review-avatar" 
-                                         style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
+                                    <a href="<?php echo $is_own_profile ? 'profile.php' : 'profiles.php?id=' . $review['user_id']; ?>">
+                                        <img src="<?php echo $review['profile_picture'] ?: 'assets/images/profile.avif'; ?>"
+                                             alt="<?php echo htmlspecialchars($review['username']); ?>"
+                                             class="review-avatar"
+                                             style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
+                                    </a>
                                     <div>
-                                        <h3 style="margin:0;font-size:1rem;font-weight:600;"><?php echo htmlspecialchars($review['username']); ?></h3>
-                                        <p class="review-date" style="margin:0;font-size:0.85rem;color:#888;"><?php echo date('F j, Y', strtotime($review['created_at'])); ?></p>
+                                        <h3 style="margin:0;font-size:1rem;font-weight:600;">
+                                            <a href="profiles.php?id=<?php echo $review['user_id']; ?>" style="color:#fff;text-decoration:none;">
+                                                <?php echo htmlspecialchars($review['username']); ?>
+                                            </a>
+                                        </h3>
+                                        <p class="review-date" style="margin:0;font-size:0.85rem;color:#888;">
+                                            <?php echo date('F j, Y', strtotime($review['created_at'])); ?>
+                                        </p>
                                     </div>
                                 </div>
                                 <span class="review-rating" style="margin-left:auto;color:#f5c518;font-weight:500;"><?php echo number_format($review['rating'], 1); ?> <span class="stars">★</span></span>
