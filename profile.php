@@ -65,19 +65,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['update_profile'])) {
             $_SESSION['username'] = $new_username;
             $user['username'] = $new_username;
             $user['profile_picture'] = $profile_picture_path;
+            $avatar = $profile_picture_path;
         } catch (PDOException $e) {
             $error = 'Failed to update profile.';
         }
     }
 }
 
-// Get user's reviews
+// Pagination for reviews
+$reviews_per_page = 5;
+$page = isset($_GET['page']) && is_numeric($_GET['page']) ? (int)$_GET['page'] : 1;
+$offset = ($page - 1) * $reviews_per_page;
+// Get total review count
+$stmt = $pdo->prepare("SELECT COUNT(*) FROM reviews WHERE user_id = ?");
+$stmt->execute([$user_id]);
+$total_reviews = $stmt->fetchColumn();
+$total_pages = ceil($total_reviews / $reviews_per_page);
+// Get paginated reviews
 $stmt = $pdo->prepare("
-    SELECT r.*, m.title as movie_title, m.poster_url, m.movie_id, m.release_year
+    SELECT r.*, m.title as movie_title, m.poster_url, m.movie_id
     FROM reviews r
     JOIN movies m ON r.movie_id = m.movie_id
     WHERE r.user_id = ?
     ORDER BY r.created_at DESC
+    LIMIT $reviews_per_page OFFSET $offset
 ");
 $stmt->execute([$user_id]);
 $reviews = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -87,6 +98,7 @@ $stmt = $pdo->prepare("SELECT COUNT(DISTINCT movie_id) as movies_watched, COUNT(
 $stmt->execute([$user_id]);
 $stats = $stmt->fetch(PDO::FETCH_ASSOC);
 $movies_watched = $stats['movies_watched'] ?? 0;
+$unique_watches = $movies_watched; // same as movies_watched
 $review_count = $stats['review_count'] ?? 0;
 
 // Get user info (updated)
@@ -94,6 +106,19 @@ $stmt = $pdo->prepare("SELECT username, email, profile_picture FROM users WHERE 
 $stmt->execute([$user_id]);
 $user = $stmt->fetch(PDO::FETCH_ASSOC);
 $avatar = $user['profile_picture'] ?: 'assets/images/profile.avif';
+
+// Get last 4 movies watched (by review date)
+$stmt = $pdo->prepare("
+    SELECT m.movie_id, m.title, m.poster_url, MAX(r.created_at) as last_watched
+    FROM reviews r
+    JOIN movies m ON r.movie_id = m.movie_id
+    WHERE r.user_id = ?
+    GROUP BY m.movie_id, m.title, m.poster_url
+    ORDER BY last_watched DESC
+    LIMIT 4
+");
+$stmt->execute([$user_id]);
+$last_movies = $stmt->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -101,9 +126,36 @@ $avatar = $user['profile_picture'] ?: 'assets/images/profile.avif';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Profile - CineVerse</title>
-    <link rel="icon" type="image/svg+xml" href="assets/images/logo-cineverse.svg">
     <link rel="stylesheet" href="assets/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+    .profile-movies-list {
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    .profile-movie-card {
+        background: #232323;
+        padding: 1rem;
+        border-radius: 10px;
+        text-align: center;
+        width: 140px;
+        transition: transform 0.2s, box-shadow 0.2s;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+    }
+    .profile-movie-card:hover {
+        transform: translateY(-8px) scale(1.04);
+        box-shadow: 0 8px 32px rgba(178,7,15,0.35);
+    }
+    .review-card {
+        transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .review-card:hover {
+        box-shadow: 0 8px 32px rgba(178,7,15,0.35) !important;
+        transform: translateY(-6px) scale(1.01);
+    }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -126,8 +178,13 @@ $avatar = $user['profile_picture'] ?: 'assets/images/profile.avif';
                 </form>
             </div>
             <div class="nav-auth">
-                <a href="profile.php" class="btn btn-secondary">Profile</a>
-                <a href="logout.php" class="btn btn-primary">Logout</a>
+                <?php if (isset($_SESSION['user_id'])): ?>
+                    <a href="profile.php" class="btn btn-secondary">Profile</a>
+                    <a href="logout.php" class="btn btn-primary">Logout</a>
+                <?php else: ?>
+                    <a href="login.php" class="btn btn-secondary">Login</a>
+                    <a href="register.php" class="btn btn-primary">Register</a>
+                <?php endif; ?>
             </div>
         </div>
     </nav>
@@ -155,6 +212,7 @@ $avatar = $user['profile_picture'] ?: 'assets/images/profile.avif';
                     <div style="font-size:2.2rem;font-weight:700;color:#f5c518;"><?php echo $movies_watched; ?></div>
                     <div style="color:#bbb;font-size:1.1rem;">Movies Watched</div>
                 </div>
+                
                 <div style="background:#232323;padding:1.5rem 2.5rem;border-radius:12px;text-align:center;min-width:160px;">
                     <div style="font-size:2.2rem;font-weight:700;color:#f5c518;"><?php echo $review_count; ?></div>
                     <div style="color:#bbb;font-size:1.1rem;">Reviews</div>
@@ -169,6 +227,26 @@ $avatar = $user['profile_picture'] ?: 'assets/images/profile.avif';
                 <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
             <?php endif; ?>
 
+            <div class="profile-movies">
+                <h2>Last 4 Movies Watched</h2>
+                <?php if (empty($last_movies)): ?>
+                    <p>No movies watched yet.</p>
+                <?php else: ?>
+                    <div class="profile-movies-list">
+                        <?php foreach ($last_movies as $movie): ?>
+                            <div class="profile-movie-card">
+                                <a href="movie.php?id=<?php echo $movie['movie_id']; ?>">
+                                    <img src="<?php echo htmlspecialchars($movie['poster_url']); ?>" alt="<?php echo htmlspecialchars($movie['title']); ?>" style="width:100px;height:150px;object-fit:cover;border-radius:8px;">
+                                    <div style="margin-top:0.5rem;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                        <?php echo htmlspecialchars($movie['title']); ?>
+                                    </div>
+                                </a>
+                            </div>
+                        <?php endforeach; ?>
+                    </div>
+                <?php endif; ?>
+            </div>
+
             <div class="profile-reviews">
                 <h2>Your Reviews</h2>
                 <?php if (empty($reviews)): ?>
@@ -181,7 +259,7 @@ $avatar = $user['profile_picture'] ?: 'assets/images/profile.avif';
                                 <div class="review-movie-info">
                                     <h3>
                                         <a href="movie.php?id=<?php echo $review['movie_id']; ?>" style="color:#fff;text-decoration:none;font-weight:600;">
-                                            <?php echo htmlspecialchars($review['movie_title']); ?> (<?php echo htmlspecialchars($review['release_year']); ?>)
+                                            <?php echo htmlspecialchars($review['movie_title']); ?>
                                         </a>
                                     </h3>
                                     <div class="inline-rating" style="margin-top:0.5rem;">
@@ -203,6 +281,13 @@ $avatar = $user['profile_picture'] ?: 'assets/images/profile.avif';
                             </div>
                         </div>
                     <?php endforeach; ?>
+                    <?php if ($total_pages > 1): ?>
+                        <div class="pagination" style="text-align:center;margin-top:1.5rem;">
+                            <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+                                <a href="profile.php?page=<?php echo $i; ?>" class="page-link" style="display:inline-block;padding:0.5rem 1rem;margin:0 0.25rem;border-radius:6px;background:<?php echo $i == $page ? '#b2070f' : '#232323'; ?>;color:#fff;text-decoration:none;font-weight:600;<?php echo $i == $page ? 'box-shadow:0 2px 8px rgba(178,7,15,0.25);' : ''; ?>"><?php echo $i; ?></a>
+                            <?php endfor; ?>
+                        </div>
+                    <?php endif; ?>
                 <?php endif; ?>
             </div>
         </div>
