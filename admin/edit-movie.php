@@ -1,7 +1,8 @@
 <?php
 session_start();
 require_once '../config/database.php';
-require_once '../config/populate.php';
+require_once '../config/tmdb.php';
+
 
 // Check if user is admin
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['is_admin']) || !$_SESSION['is_admin']) {
@@ -36,7 +37,7 @@ if (!$movie) {
     exit;
 }
 
-// Get all directors for the dropdown
+
 $stmt = $pdo->query("SELECT director_id, name FROM directors ORDER BY name");
 $directors = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
@@ -115,6 +116,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 WHERE movie_id = ?
             ");
             $stmt->execute([$title, $release_year, $director_id, $description, $poster_url, $movie_id]);
+
+            // Check and update director image if needed
+            $stmt = $pdo->prepare("SELECT image_url FROM directors WHERE director_id = ?");
+            $stmt->execute([$director_id]);
+            $director = $stmt->fetch(PDO::FETCH_ASSOC);
+            if ($director && $director['image_url'] === 'assets/images/profile.avif') {
+                $stmt = $pdo->prepare("SELECT name FROM directors WHERE director_id = ?");
+                $stmt->execute([$director_id]);
+                $director_name = $stmt->fetch(PDO::FETCH_COLUMN);
+                $image_url = fetch_tmdb_person_image($director_name);
+                if ($image_url !== 'assets/images/profile.avif') {
+                    $stmt = $pdo->prepare("UPDATE directors SET image_url = ? WHERE director_id = ?");
+                    $stmt->execute([$image_url, $director_id]);
+                }
+            }
 
             // Update genres
             $stmt = $pdo->prepare("DELETE FROM movie_genres WHERE movie_id = ?");
