@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../config/database.php';
+require_once '../config/populate.php';
 
 // Check if user is admin
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['is_admin']) || !$_SESSION['is_admin']) {
@@ -14,6 +15,19 @@ $success = '';
 // Get all genres for the checkboxes
 $stmt = $pdo->query("SELECT genre_id, name FROM genres ORDER BY name");
 $genres = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+function fetch_tmdb_person_image($name, $type = 'person') {
+    global $api_key;
+    $base_url = 'https://api.themoviedb.org/3/search/person?api_key=' . $api_key . '&query=' . urlencode($name);
+    $response = @file_get_contents($base_url);
+    if ($response) {
+        $data = json_decode($response, true);
+        if (!empty($data['results'][0]['profile_path'])) {
+            return 'https://image.tmdb.org/t/p/w500' . $data['results'][0]['profile_path'];
+        }
+    }
+    return 'assets/images/profile.avif'; // fallback
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = trim($_POST['title']);
@@ -30,7 +44,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $fileTmpPath = $_FILES['poster_file']['tmp_name'];
         $fileName = basename($_FILES['poster_file']['name']);
         $fileExt = strtolower(pathinfo($fileName, PATHINFO_EXTENSION));
-             $allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'];
+        $allowedExts = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'avif'];
         if (in_array($fileExt, $allowedExts)) {
             $newFileName = uniqid('poster_', true) . '.' . $fileExt;
             $uploadDir = '../assets/posters/';
@@ -43,6 +57,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             } else {
                 $error = 'Failed to upload poster image.';
             }
+        } else {
+            $error = 'Invalid poster file type.';
+        }
     } else {
         $error = 'Poster image is required.';
     }
@@ -54,14 +71,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->beginTransaction();
 
             // Insert or get director
-            $stmt = $pdo->prepare("SELECT director_id FROM directors WHERE name = ?");
+            $stmt = $pdo->prepare("SELECT director_id, image_url FROM directors WHERE name = ?");
             $stmt->execute([$director_name]);
             $director = $stmt->fetch(PDO::FETCH_ASSOC);
             if ($director) {
                 $director_id = $director['director_id'];
+                if ($director['image_url'] === 'assets/images/profile.avif') {
+                    $image_url = fetch_tmdb_person_image($director_name);
+                    if ($image_url !== 'assets/images/profile.avif') {
+                        $stmt = $pdo->prepare("UPDATE directors SET image_url = ? WHERE director_id = ?");
+                        $stmt->execute([$image_url, $director_id]);
+                    }
+                }
             } else {
-                $stmt = $pdo->prepare("INSERT INTO directors (name) VALUES (?)");
-                $stmt->execute([$director_name]);
+                $image_url = fetch_tmdb_person_image($director_name);
+                $stmt = $pdo->prepare("INSERT INTO directors (name, image_url) VALUES (?, ?)");
+                $stmt->execute([$director_name, $image_url]);
                 $director_id = $pdo->lastInsertId();
             }
 
@@ -101,14 +126,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 foreach ($actors as $actor_name) {
                     if ($actor_name === '') continue;
                     // Insert or get actor
-                    $stmt = $pdo->prepare("SELECT actor_id FROM actors WHERE name = ?");
+                    $stmt = $pdo->prepare("SELECT actor_id, image_url FROM actors WHERE name = ?");
                     $stmt->execute([$actor_name]);
                     $actor = $stmt->fetch(PDO::FETCH_ASSOC);
                     if ($actor) {
                         $actor_id = $actor['actor_id'];
+                        if ($actor['image_url'] === 'assets/images/profile.avif') {
+                            $image_url = fetch_tmdb_person_image($actor_name);
+                            if ($image_url !== 'assets/images/profile.avif') {
+                                $stmt = $pdo->prepare("UPDATE actors SET image_url = ? WHERE actor_id = ?");
+                                $stmt->execute([$image_url, $actor_id]);
+                            }
+                        }
                     } else {
-                        $stmt = $pdo->prepare("INSERT INTO actors (name) VALUES (?)");
-                        $stmt->execute([$actor_name]);
+                        $image_url = fetch_tmdb_person_image($actor_name);
+                        $stmt = $pdo->prepare("INSERT INTO actors (name, image_url) VALUES (?, ?)");
+                        $stmt->execute([$actor_name, $image_url]);
                         $actor_id = $pdo->lastInsertId();
                     }
                     // Link actor to movie
@@ -134,8 +167,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Add Movie - CineVerse</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="icon" type="image/svg+xml" href="assets/images/logo-cineverse.svg">
+    <link rel="stylesheet" href="../assets/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         .form-container {
@@ -168,7 +201,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             min-height: 150px;
             resize: vertical;
         }
-        .genre-checkboxes, .genre-checkbox { display: none; }
         .btn-submit {
             background: #f5c518;
             color: #000;
