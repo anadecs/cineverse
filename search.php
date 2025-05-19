@@ -12,6 +12,15 @@ $sort = $_GET['sort'] ?? 'rating_desc';
 $results = [];
 $total_results = 0;
 
+// User search logic
+$user_search_results = [];
+if (isset($_GET['q']) && trim($_GET['q']) !== '') {
+    $search = '%' . trim($_GET['q']) . '%';
+    $stmt = $pdo->prepare("SELECT user_id, username, profile_picture FROM users WHERE username LIKE ? LIMIT 10");
+    $stmt->execute([$search]);
+    $user_search_results = $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
 if ($query) {
     $search_conditions = [];
     $params = [];
@@ -126,8 +135,37 @@ $total_pages = ceil($total_results / $per_page);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search Results - Letterboxd</title>
     <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="icon" type="image/svg+xml" href="assets/images/logo-cineverse.svg">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .user-search-result-card {
+            background: #232323;
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+        .user-search-result-card:hover {
+            box-shadow: 0 8px 32px rgba(178,7,15,0.35);
+            transform: translateY(-4px) scale(1.03);
+        }
+        .user-search-result-card a:hover, .user-search-result-card:hover a {
+            box-shadow: 0 8px 32px rgba(178,7,15,0.35);
+            transform: translateY(-4px) scale(1.03);
+            background: #232323;
+            color: #fff;
+        }
+        .user-search-result-card a {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            width: 100%;
+            border-radius: 8px;
+            transition: box-shadow 0.2s, transform 0.2s, background 0.2s;
+        }
+    </style>
 </head>
 <body>
     <nav class="navbar">
@@ -228,6 +266,26 @@ $total_pages = ceil($total_results / $per_page);
                 <?php endif; ?>
             <?php endif; ?>
         </div>
+
+        <section class="user-search" style="margin:2rem auto;max-width:700px;">
+            <?php if (!empty($user_search_results)): ?>
+                <div class="user-search-results" style="margin-bottom:2rem;">
+                    <h3 style="color:#fff;margin-bottom:1rem;">User Results</h3>
+                    <ul style="list-style:none;padding:0;">
+                        <?php foreach ($user_search_results as $user): ?>
+                            <li class="user-search-result-card" style="padding:0;">
+                                <a href="profiles.php?id=<?php echo $user['user_id']; ?>" style="display:flex;align-items:center;gap:1rem;padding:0.75rem 1.25rem;border-radius:8px;width:100%;background:#232323;color:#fff;font-weight:600;font-size:1.1rem;text-decoration:none;transition:box-shadow 0.2s,transform 0.2s;">
+                                    <img src="<?php echo htmlspecialchars($user['profile_picture'] ?: 'assets/images/profile.avif'); ?>" alt="<?php echo htmlspecialchars($user['username']); ?>" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">
+                                    <?php echo htmlspecialchars($user['username']); ?>
+                                </a>
+                            </li>
+                        <?php endforeach; ?>
+                    </ul>
+                </div>
+            <?php elseif (isset($_GET['q']) && trim($_GET['q']) !== ''): ?>
+                
+            <?php endif; ?>
+        </section>
     </main>
 
     <footer>
