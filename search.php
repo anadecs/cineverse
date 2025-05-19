@@ -5,7 +5,7 @@ require_once 'config/database.php';
 $query = trim($_GET['q'] ?? '');
 $type = $_GET['type'] ?? 'all';
 $page = max(1, intval($_GET['page'] ?? 1));
-$per_page = 12;
+$per_page = 10;
 $offset = ($page - 1) * $per_page;
 $sort = $_GET['sort'] ?? 'rating_desc';
 
