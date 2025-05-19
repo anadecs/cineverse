@@ -1,7 +1,7 @@
 <?php
 session_start();
 require_once '../config/database.php';
-require_once '../config/populate.php';
+require_once '../config/tmdb.php';
 
 // Check if user is admin
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['is_admin']) || !$_SESSION['is_admin']) {
