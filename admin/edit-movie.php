@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once '../config/database.php';
+require_once '../config/populate.php';
 
 // Check if user is admin
 if (!isset($_SESSION['user_id']) || !isset($_SESSION['is_admin']) || !$_SESSION['is_admin']) {
@@ -43,7 +44,6 @@ $directors = $stmt->fetchAll(PDO::FETCH_ASSOC);
 $stmt = $pdo->query("SELECT genre_id, name FROM genres ORDER BY name");
 $genres = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-
 // Get current cast (actors)
 $stmt = $pdo->prepare("SELECT a.name FROM movie_actors ma JOIN actors a ON ma.actor_id = a.actor_id WHERE ma.movie_id = ?");
 $stmt->execute([$movie_id]);
@@ -53,15 +53,27 @@ $cast_str = implode(', ', $cast_names);
 // Get genres string
 $genres_str = $movie['genre_names'] ?? '';
 
+function fetch_tmdb_person_image($name, $type = 'person') {
+    global $api_key;
+    $base_url = 'https://api.themoviedb.org/3/search/person?api_key=' . $api_key . '&query=' . urlencode($name);
+    $response = @file_get_contents($base_url);
+    if ($response) {
+        $data = json_decode($response, true);
+        if (!empty($data['results'][0]['profile_path'])) {
+            return 'https://image.tmdb.org/t/p/w500' . $data['results'][0]['profile_path'];
+        }
+    }
+    return 'assets/images/profile.avif'; // fallback
+}
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $title = trim($_POST['title']);
     $release_year = (int)$_POST['release_year'];
     $director_id = (int)$_POST['director_id'];
     $description = trim($_POST['description']);
-    $new_genres = $_POST['genres'] ?? [];
     $genres_input = trim($_POST['genres'] ?? '');
     $cast = trim($_POST['cast'] ?? '');
-    $poster_url = $movie['poster_url'];
+    $poster_url = $movie['poster_url']; // Keep existing poster by default
 
     // Handle file upload
     if (isset($_FILES['poster_file']) && $_FILES['poster_file']['error'] === UPLOAD_ERR_OK) {
@@ -102,7 +114,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 SET title = ?, release_year = ?, director_id = ?, description = ?, poster_url = ?
                 WHERE movie_id = ?
             ");
-             $stmt->execute([$title, $release_year, $director_id, $description, $poster_url, $movie_id]);
+            $stmt->execute([$title, $release_year, $director_id, $description, $poster_url, $movie_id]);
 
             // Update genres
             $stmt = $pdo->prepare("DELETE FROM movie_genres WHERE movie_id = ?");
@@ -137,14 +149,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 foreach ($actors as $actor_name) {
                     if ($actor_name === '') continue;
                     // Insert or get actor
-                    $stmt = $pdo->prepare("SELECT actor_id FROM actors WHERE name = ?");
+                    $stmt = $pdo->prepare("SELECT actor_id, image_url FROM actors WHERE name = ?");
                     $stmt->execute([$actor_name]);
                     $actor = $stmt->fetch(PDO::FETCH_ASSOC);
                     if ($actor) {
                         $actor_id = $actor['actor_id'];
+                        if ($actor['image_url'] === 'assets/images/profile.avif') {
+                            $image_url = fetch_tmdb_person_image($actor_name);
+                            if ($image_url !== 'assets/images/profile.avif') {
+                                $stmt = $pdo->prepare("UPDATE actors SET image_url = ? WHERE actor_id = ?");
+                                $stmt->execute([$image_url, $actor_id]);
+                            }
+                        }
                     } else {
-                        $stmt = $pdo->prepare("INSERT INTO actors (name) VALUES (?)");
-                        $stmt->execute([$actor_name]);
+                        $image_url = fetch_tmdb_person_image($actor_name);
+                        $stmt = $pdo->prepare("INSERT INTO actors (name, image_url) VALUES (?, ?)");
+                        $stmt->execute([$actor_name, $image_url]);
                         $actor_id = $pdo->lastInsertId();
                     }
                     // Link actor to movie
@@ -170,8 +190,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Movie - CineVerse</title>
-    <link rel="stylesheet" href="../assets/css/style.css">
     <link rel="icon" type="image/svg+xml" href="assets/images/logo-cineverse.svg">
+    <link rel="stylesheet" href="../assets/css/style.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
         .form-container {
@@ -203,18 +223,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .form-group textarea {
             min-height: 150px;
             resize: vertical;
-        }
-        .genre-checkboxes {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.75rem 1.5rem;
-            margin-top: 0.5rem;
-        }
-        .genre-checkbox {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            min-width: 160px;
         }
         .btn-submit {
             background: #f5c518;
@@ -278,7 +286,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 <div class="alert alert-success"><?php echo htmlspecialchars($success); ?></div>
             <?php endif; ?>
 
-                <form method="POST" action="edit-movie.php?id=<?php echo $movie_id; ?>" enctype="multipart/form-data">
+            <form method="POST" action="edit-movie.php?id=<?php echo $movie_id; ?>" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="title">Movie Title</label>
                     <input type="text" id="title" name="title" value="<?php echo htmlspecialchars($movie['title']); ?>" required>
@@ -314,7 +322,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 <div class="form-group">
                     <label for="genres">Genres (comma-separated)</label>
-                    <input type="text" id="genres" name="genres" placeholder="e.g. Action, Comedy, Drama" value="<?php echo htmlspecialchars($genres_str); ?>" required>
+                    <textarea id="genres" name="genres" placeholder="e.g. Action, Comedy, Drama" style="min-height:40px;"><?php echo htmlspecialchars($genres_str); ?></textarea>
                 </div>
 
                 <div class="form-group">
