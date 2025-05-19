@@ -2,16 +2,7 @@
 session_start();
 require_once 'config/database.php';
 
-$page = max(1, intval($_GET['page'] ?? 1));
-$per_page = 12;
-$offset = ($page - 1) * $per_page;
-
-// Get total count of movies
-$stmt = $pdo->query("SELECT COUNT(*) FROM movies");
-$total_movies = $stmt->fetchColumn();
-$total_pages = ceil($total_movies / $per_page);
-
-// Get top rated movies
+// Get all top rated movies
 $sql = "
     SELECT m.*, d.name as director_name,
            (SELECT AVG(r.rating)  FROM reviews r WHERE r.movie_id = m.movie_id) as avg_rating_5,
@@ -20,7 +11,6 @@ $sql = "
     LEFT JOIN directors d ON m.director_id = d.director_id
     HAVING avg_rating_5 > 0
     ORDER BY avg_rating_5 DESC
-    LIMIT $per_page OFFSET $offset
 ";
 $stmt = $pdo->prepare($sql);
 $stmt->execute();
@@ -33,7 +23,6 @@ $movies = $stmt->fetchAll(PDO::FETCH_ASSOC);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Top Rated Movies - CineVerse</title>
     <link rel="stylesheet" href="assets/css/style.css">
-    <link rel="icon" type="image/svg+xml" href="assets/images/logo-cineverse.svg">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
@@ -93,25 +82,6 @@ $movies = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <?php endforeach; ?>
             <?php endif; ?>
         </div>
-
-        <?php if ($total_pages > 1): ?>
-            <div class="pagination">
-                <?php if ($page > 1): ?>
-                    <a href="?page=<?php echo $page - 1; ?>" class="page-link">&laquo; Previous</a>
-                <?php endif; ?>
-                
-                <?php for ($i = 1; $i <= $total_pages; $i++): ?>
-                    <a href="?page=<?php echo $i; ?>" 
-                       class="page-link <?php echo $i === $page ? 'active' : ''; ?>">
-                        <?php echo $i; ?>
-                    </a>
-                <?php endfor; ?>
-                
-                <?php if ($page < $total_pages): ?>
-                    <a href="?page=<?php echo $page + 1; ?>" class="page-link">Next &raquo;</a>
-                <?php endif; ?>
-            </div>
-        <?php endif; ?>
     </main>
 
     <footer>
