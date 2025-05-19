@@ -1,11 +1,12 @@
 <?php
 set_time_limit(1200); // 20 minutes
 require_once '../config/database.php';
+require_once '../config/tmdb.php';
 
-// TMDB API configuration
-$api_key = 'YOUR_API_KEY';
-$base_url = 'https://api.themoviedb.org/3';
-$image_base_url = 'https://image.tmdb.org/t/p/w500';
+
+global $api_key;
+global $base_url;
+global $image_base_url;
 
 
 $movie_titles = [
