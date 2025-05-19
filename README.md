@@ -1,7 +1,7 @@
 # CineVerse
 
 CineVerse is a movie diary and social network for film lovers. Users can browse, review, and manage movies, as well as view statistics and admin features.
-You can access the online version here https://cineversee.great-site.net/
+You can access the online version here https://mgakuya.infy.uk/index.php
 ## Features
 
 - Browse, search, and review movies
