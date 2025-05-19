@@ -32,7 +32,7 @@ You have two options to populate the database:
 #### Option 2: Using populate.php
 
 - Import the provided `config/database.sql` to create the database and tables
-- Get your API key from [TMDB](https://www.themoviedb.org/settings/api)
+- Get your API key from [TMDB](https://www.themoviedb.org/settings/api) (REQUIRED)
 - Add your API key to `config/populate.php`
 - Run `populate.php` in your browser to automatically fetch popular movies from TMDB
 - Includes movie details like title, year, poster, director, and rating
