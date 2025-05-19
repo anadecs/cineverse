@@ -1,6 +1,6 @@
 -- Create database
-CREATE DATABASE IF NOT EXISTS cinverse;
-USE cinverse;
+CREATE DATABASE IF NOT EXISTS cineverse;
+USE cineverse;
 
 -- Users table
 CREATE TABLE users (
