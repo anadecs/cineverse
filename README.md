@@ -15,7 +15,7 @@ You can access the online version here https://mgakuya.infy.uk/index.php
 ### 1. Clone the Repository
 
 ```
-git clone https://github.com/anadecs/cineverse.git
+git clone https://github.com/teyorkk/cineverse.git
 cd cineverse
 ```
 
